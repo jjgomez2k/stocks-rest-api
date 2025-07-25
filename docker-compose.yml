@@ -1,0 +1,40 @@
+services:
+  db:
+    image: postgres:13
+    container_name: stocks_db
+    restart: always
+    environment:
+      POSTGRES_DB: stocks_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432" # Expose DB port for direct access if needed (e.g., for psql client)
+    networks:
+      - stocks_network
+
+  app:
+    build: .
+    container_name: stocks_api_app
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      # This DATABASE_URL uses the service name 'db' as the hostname
+      DATABASE_URL: "postgresql://user:password@db:5432/stocks_db"
+      # Polygon API key is now loaded from the .env file for security
+      POLYGON_API_KEY: ${POLYGON_API_KEY}
+      MARKETWATCH_COOKIE: letsGetMikey=enabled; refresh=off; datadome=1Ls7Yx~r65kadTcrOjgJFmOvUAPuxZjfNNVNy9FWd1uMBMVwrsp~IWFWTXGneZBxsMstv3YQ2oNa0qT_SmBuC9ewNCeM_xn_Nt3Qu~6TCXXagOSmw4UYJ4sE31vljVC1; mw_loc=%7B%22Region%22%3A%22AM%22%2C%22Country%22%3A%22BR%22%2C%22Continent%22%3A%22NA%22%2C%22ApplicablePrivacy%22%3A0%7D; gdprApplies=false; ab_uuid=dd1a251e-6eb0-4fb7-8168-466028620701; fullcss-quote=quote-f14a7a14c7.min.css; icons-loaded=true; usr_prof_v2=eyJpYyI6MX0%3D; _lr_geo_location_state=AM; _lr_geo_location=BR; recentqsmkii=Stock-US-AAPL
+    depends_on:
+      - db # Ensure db service starts before app
+    networks:
+      - stocks_network
+
+volumes:
+  db_data: # Define a named volume for persistent database data
+
+networks:
+  stocks_network: # Define a custom network for services to communicate
+    driver: bridge
+
